@@ -5,7 +5,7 @@ from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping, Learnin
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, LSTM, GRU, Flatten, Conv1D, MaxPooling1D, Conv2D, MaxPooling2D, TimeDistributed, Masking, Activation, RepeatVector
 import keras.backend as K
-from keras.layers.core import Activation
+from keras.layers import Activation
 
 
 def model_gru(num_gru, seq_length, num_features, num_labels):
