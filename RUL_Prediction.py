@@ -77,7 +77,7 @@ def train_model(inp_model, num_epochs):
     if inp_model == "stacked_gru":
         model = stacked_gru(batch_size, sequence_length, num_features, num_labels)
     elif inp_model == "cnn_gru":
-        model = model_cnngru(batch_size, sequence_length, num_features, num_labels)
+        model = model_cnngru(2, 2, sequence_length, num_features, num_labels)
     elif inp_model == "single_gru":
         model = model_gru(batch_size, sequence_length, num_features, num_labels)
     else:
