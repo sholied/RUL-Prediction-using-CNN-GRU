@@ -12,7 +12,7 @@ jobs:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip install -r requirements.txt
-          python RUL_Prediction.py --model=cnn_gru --input=CMAPSSData --epochs=100
+          python RUL_Prediction.py --model=cnn_gru --input=CMAPSSData --epochs=100 --output=model
 
           cat metrics.txt >> report.md
           echo "![](./plot.png)" >> report.md
