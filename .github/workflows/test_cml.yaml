@@ -14,4 +14,3 @@ jobs:
           pip install -r requirements.txt
           python RUL_Prediction.py --model=cnn_gru --input=CMAPSSData --epochs=3 --output=model
           
-          cml comment create report.md
