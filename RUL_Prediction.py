@@ -106,7 +106,7 @@ def train_model(inp_model, num_epochs):
     tensorboard = TensorBoard(log_dir=log_dir,
                             histogram_freq=0, write_graph=True, write_images=False)
 
-    checkpointer = ModelCheckpoint(checkpoint_path, verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint(checkpoint_path + '.keras', verbose=1, save_best_only=True)
 
     epoch_loss_history = []
     epoch_val_history = []
