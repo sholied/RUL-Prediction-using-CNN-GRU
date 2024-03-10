@@ -12,5 +12,5 @@ jobs:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip install -r requirements.txt
-          python RUL_Prediction.py --model=cnn_gru --input=CMAPSSData --epochs=3 --output=model
+          python RUL_Prediction.py --model=cnn_gru --input=CMAPSSData --epochs=3 --output=model/test/
           
