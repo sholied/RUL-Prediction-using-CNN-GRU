@@ -23,7 +23,7 @@ from util import set_log_dir, rmse
 from util import LRDecay
 from data_util import *
 from model import *
-import keras.backend as K
+import tensorflow.keras.backend as K
 
 MODEL_DIR = os.path.abspath("model")
 
