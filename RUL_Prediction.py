@@ -23,7 +23,8 @@ from util import set_log_dir, rmse
 from util import LRDecay
 from data_util import *
 from model import *
-import tensorflow.keras.backend as K
+
+from tensorflow.keras import backend as K
 
 MODEL_DIR = os.path.abspath("model")
 
@@ -62,12 +63,17 @@ def load_data(paths, col_names, sort_cols):
     df = df.sort_values(sort_cols)
     return df
 
+
 def r2_keras(y_true, y_pred):
     """Coefficient of Determination 
     """
-    SS_res =  K.sum(K.square( y_true - y_pred ))
-    SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
-    return ( 1 - SS_res/(SS_tot + K.epsilon()) )
+    y_true = K.cast(y_true, 'float32')
+    y_pred = K.cast(y_pred, 'float32')
+    
+    SS_res = K.sum(K.square(y_true - y_pred))
+    SS_tot = K.sum(K.square(y_true - K.mean(y_true)))
+    
+    return 1 - SS_res / (SS_tot + K.epsilon())
 
 #Calculate Training DATA RUL
 def calc_training_rul(df):
