@@ -66,9 +66,7 @@ def find_model_file(model_dir, by_val_loss=True):
 
 # Root Mean Squared Loss Function
 def rmse(y_true, y_pred):
-    #tf.cast(y_pred, tf.int64)
-    #tf.cast(y_true, tf.float32)
-    return K.sqrt(K.mean(K.square(float(y_pred) - float(y_true))))
+    return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
 
 class LRDecay:
