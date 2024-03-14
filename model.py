@@ -1,11 +1,11 @@
 import tensorflow as tf
 import keras
 from tensorflow.keras.optimizers import Adam
-from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping, LearningRateScheduler
-from keras.models import Sequential, load_model
-from keras.layers import Dense, Dropout, LSTM, GRU, Flatten, Conv1D, MaxPooling1D, Conv2D, MaxPooling2D, TimeDistributed, Masking, Activation, RepeatVector
-import keras.backend as K
-from keras.layers.core import Activation
+from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping, LearningRateScheduler
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, Dropout, LSTM, GRU, Flatten, Conv1D, MaxPooling1D, Conv2D, MaxPooling2D, TimeDistributed, Masking, Activation, RepeatVector
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Activation
 
 
 def model_gru(num_gru, seq_length, num_features, num_labels):

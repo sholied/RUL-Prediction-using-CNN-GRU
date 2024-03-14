@@ -19,7 +19,7 @@ from sklearn.metrics import confusion_matrix, recall_score, precision_score
 from tqdm import tqdm, tqdm_notebook
 
 from data_generator import TSDataGenerator, split_data, create_generators
-from util import set_log_dir, rmse
+from util import set_log_dir, rmse, r2_keras
 from util import LRDecay
 from data_util import *
 from model import *
@@ -74,15 +74,13 @@ def calc_training_rul(df):
 
 def train_model(inp_model, num_epochs):
     # Create the model
-    if inp_model == "stacked_gru":
-        model = stacked_gru(batch_size, sequence_length, num_features, num_labels)
-    elif inp_model == "cnn_gru":
-        model = cnn_gru(batch_size, sequence_length, num_features, num_labels)
+    if inp_model == "cnn_gru":
+        model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels)
     elif inp_model == "single_gru":
-        model = single_gru(batch_size, sequence_length, num_features, num_labels)
+        model = model_gru(num_gru, sequence_length, num_features, num_labels)
     else:
         print("-------------------------------------------------------------------------\n")
-        print("model incorrect, please choose one : single_gru or stacked_gru or cnn_gru !\n")
+        print("model incorrect, please choose one : single_gru or cnn_gru !\n")
         print("-------------------------------------------------------------------------\n")
 
     model.compile(loss=rmse, optimizer='rmsprop',metrics=['mse',r2_keras])
@@ -173,45 +171,44 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model",
-        required=True,
+        required=False,
         type=str,
         default="single_gru",
         help="choose model what you want train, gru or cnn_gru",
     )
     parser.add_argument(
         "--input",
-        required=True,
-        metavar="~/CMAPSSData/",
+        required=False,
+        metavar="./dataset/",
+        default="./dataset/",
         help="Full input path of dataset",
     )
     parser.add_argument(
         "--output",
-        required=True,
-        metavar="~/model/",
+        required=False,
+        metavar="./model/",
+        default="./model/",
         help="Full output path of dataset",
     )
     parser.add_argument(
         "--epochs",
-        required=True,
+        required=False,
         type=int,
-        default="50",
+        default="5",
         help="number of epochs for training",
     )
 
     args = parser.parse_args()
-    DATA_DIR = args.input
-    MODEL_DIR = args.output
-
-    path = os.path.join(DATA_DIR, "train_FD*.txt")
+    DATA_DIR = os.path.abspath(args.input)
+    MODEL_DIR = os.path.abspath(args.output)
     persist_run_stats = True # Enable for saving results to CouchDB
+    path = os.path.join(DATA_DIR, "train_FD*.txt")    
     if not os.path.exists(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
     path = os.path.join(DATA_DIR, "train_FD*.txt")
     all_files = glob.glob(path)
-
     train_df = load_data(all_files, cols, sort_cols)
-
     train_df = calc_training_rul(train_df)
 
     #Data Transformation
@@ -254,6 +251,9 @@ if __name__ == "__main__":
 
     num_features = len(feature_cols)
     num_labels = len(label_cols)
+
+    num_cnn = 3
+    num_gru = 2
 
 
     # Setup log directory

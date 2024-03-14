@@ -70,6 +70,13 @@ def rmse(y_true, y_pred):
     #tf.cast(y_true, tf.float32)
     return K.sqrt(K.mean(K.square(float(y_pred) - float(y_true))))
 
+def r2_keras(y_true, y_pred):
+    """Coefficient of Determination 
+    """
+    SS_res =  K.sum(K.square( y_true - y_pred ))
+    SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
+    return ( 1 - SS_res/(SS_tot + K.epsilon()) )
+
 
 class LRDecay:
 
