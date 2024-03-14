@@ -3,3 +3,4 @@ matplotlib=3.7.5
 tensorflow=2.13.0
 scikit-learn=1.3.2
 tqdm=4.66.2
+seaborn=0.13.2
