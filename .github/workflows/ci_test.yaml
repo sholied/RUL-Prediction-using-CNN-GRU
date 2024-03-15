@@ -21,7 +21,6 @@ jobs:
         run: |
           # Report metrics
           echo "## Result" >> report.md
-          # cat results.txt >> report.md
           cml-publish results.txt --md >> report.md
 
           # Report training history
