@@ -151,8 +151,35 @@ def train_model(inp_model, num_epochs):
         except:
             pass
     time_total = time.time() - start
-    info_path = os.path.join(MODEL_DIR, 'information_training.txt')  
-    with open(info_path, 'w') as f:
+
+    fig, ax1 = plt.subplots(figsize=(10,6))
+
+    epochs = np.arange(len(epoch_loss_history))
+    ax1.plot(epochs, epoch_loss_history, label='loss')
+    ax1.plot(epochs, epoch_val_history, label='val_loss')
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("RMSE")
+    ax1.set_ylim(0)
+    ax1.legend()
+
+    # Add a rhs scale for the LR.
+    ax2 = ax1.twinx()
+    lr_epochs = []
+    lr_steps = []
+
+    for e1, l1, l2 in epoch_lr_history:
+        lr_epochs.append(e1)
+        lr_steps.append(l1)
+
+
+    ax2.plot(lr_epochs, lr_steps, 'r.', label='lr')
+    ax2.set_ylabel("Learning Rate")
+    ax2.legend(loc='lower left')
+
+    fig.tight_layout()
+    plt.savefig("plot.png")
+
+    with open('result.txt', 'w') as f:
         f.write("The previous best weights : " + checkpoint_path + "\n")
         f.write("Epochs that used : " + str(num_epochs) + "\n")
         f.write("Model that used :" + str(inp_model) + "\n")
