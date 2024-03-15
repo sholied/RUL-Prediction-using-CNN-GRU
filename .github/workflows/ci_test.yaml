@@ -28,3 +28,30 @@ jobs:
           echo "## Plots\n### Training Loss VS Val Loss" >> report.md
           echo '![](./plot.png)' >> report.md
           cml comment create report.md
+  validate-model-ci:
+    runs-on: ubuntu-latest
+    container: docker://ghcr.io/iterative/cml:0-dvc2-base1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+    
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Test model
+        run: |
+          python testing.py
+
+      - name: Write Testing report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Report result test
+          echo "## Test Result" >> report.md
+          cat test_result.txt >> report.md
+
+          # Report testing history
+          echo "## Plots\n### Prediction VS Actual plot" >> report.md
+          echo '![](./plot_prediction.png)' >> report.md
+          cml comment create report.md

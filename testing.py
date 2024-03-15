@@ -16,10 +16,10 @@ PYTHONHASHSEED = 0
 from sklearn.pipeline import Pipeline
 from sklearn import preprocessing
 from sklearn.metrics import confusion_matrix, recall_score, precision_score
-from tqdm import tqdm, tqdm_notebook
+from tqdm.notebook import tqdm
 
 from data_generator import TSDataGenerator, split_data, create_generators
-from util import set_log_dir, rmse
+from util import set_log_dir, rmse, r2_keras
 from util import LRDecay
 from data_util import *
 from model import *
@@ -93,7 +93,7 @@ def plot_prediction(rul_actual, rul_predicted):
     plt.ylim(0)
 
     plt.legend()
-    plt.show()
+    plt.savefig("plot_prediction.png")
 
 
 if __name__ == "__main__":
@@ -103,33 +103,38 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--dataset",
-        required=True,
-        metavar="~/CMAPSSData/",
+        required=False,
+        metavar="./dataset/",
+        default="./dataset/",
         help="Full input path of dataset",
     )
     parser.add_argument(
         "--input_model_weight",
-        required=True,
-        metavar="~/model/",
+        required=False,
+        metavar="./model/",
+        default="./model/",
         help="Full output path of dataset",
     )
     parser.add_argument(
         "--dataset_name",
-        required=True,
+        required=False,
         metavar="FD002",
+        default="FD002",
         help="Full input path of dataset",
     )
 
     args = parser.parse_args()
-    DATA_DIR = args.dataset
-    MODEL_DIR = args.input_model_weight
+    DATA_DIR = os.path.abspath(args.dataset)
+    MODEL_DIR = os.path.abspath(args.input_model_weight)
+    persist_run_stats = True # Enable for saving results to CouchDB
+
     #load test dataset
     dataset_name = args.dataset_name
     dataset_name = str(dataset_name)
 
 
     # Setup log directory
-    checkpoint_path = glob.glob(MODEL_DIR+"/*/*.h5")[0]
+    checkpoint_path = sorted(glob.glob(MODEL_DIR+"/*/*.h5"), reverse=True)[0]
 
     print("Checkpoint path: ", checkpoint_path)
     #Data Transformation
@@ -140,7 +145,7 @@ if __name__ == "__main__":
 
     # Save the pipeline for later use
     import joblib 
-    pipeline_path = glob.glob(MODEL_DIR+"/*/*.pkl")[0]
+    pipeline_path = sorted(glob.glob(MODEL_DIR+"/*/*.pkl"), reverse=True)[0]
     joblib.dump(pipeline, pipeline_path) 
 
     print("Loading model: ", checkpoint_path)
@@ -235,7 +240,7 @@ if __name__ == "__main__":
 
     X = []
     y = []
-    for p in tqdm_notebook(test_data_generator.generate(), total=test_data_generator.summary()['max_iterations']):
+    for p in tqdm(test_data_generator.generate(), total=test_data_generator.summary()['max_iterations']):
         X.append(p[0])
         y.append(p[1])
 
@@ -245,17 +250,20 @@ if __name__ == "__main__":
     score = inf_model.evaluate(test_X, test_y, verbose=1, batch_size=batch_size)
     print('Test score:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(*score))
 
+    # Saving scores to a text file
+    with open('test_result.txt', 'w') as file:
+        file.write('Test score:\n')
+        file.write('\tRMSE: {}\n'.format(score[0]))
+        file.write('\tMSE: {}\n'.format(score[1]))
+        file.write('\tR2: {}\n'.format(score[2]))
+
+
     test_data_generator = TSDataGenerator(test_df, feature_cols, label_cols, batch_size=batch_size, seq_length=sequence_length, loop=False)
 
     g = test_data_generator.generate()
     test_X, test_y = next(g)
     y_pred_array = inf_model.predict_on_batch(test_X)
-
-#    plot_prediction(test_y, y_pred_array)
-
-    test_X, test_y = next(g)
-    y_pred_array = inf_model.predict_on_batch(test_X)
-#    plot_prediction(test_y, y_pred_array)
+    plot_prediction(test_y, y_pred_array)
 
     # Evaluation metrics are RMSE, MSE, MAE
     score = inf_model.evaluate(test_X, test_y, verbose=1, batch_size=batch_size)
