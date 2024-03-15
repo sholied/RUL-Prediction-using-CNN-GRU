@@ -29,6 +29,7 @@ jobs:
           echo '![](./plot.png)' >> report.md
           cml comment create report.md
   validate-model-ci:
+    needs: train-model-ci
     runs-on: ubuntu-latest
     container: docker://ghcr.io/iterative/cml:0-dvc2-base1
     steps:
