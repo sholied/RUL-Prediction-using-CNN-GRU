@@ -22,9 +22,9 @@ jobs:
         run: |
           # Report metrics
           echo "## Result" >> report.md
-          cat results.txt --md >> report.md
+          cat results.txt >> report.md
 
           # Report training history
           echo -e "## Plots\n### Training History" >> report.md
-          echo "![inline](./plot.png)" >> report.md
-          cml-send-comment report.md
+          echo '![](./plot.png)' >> report.md
+          cml comment create report.md
