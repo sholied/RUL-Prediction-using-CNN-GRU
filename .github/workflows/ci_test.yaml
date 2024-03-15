@@ -7,23 +7,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - uses: iterative/setup-cml@v1
-
+    
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+
       - name: Train model
         run: |
           python train_model.py
+
       - name: Write CML report
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Report metrics
           echo "## Result" >> report.md
-          cml-publish results.txt --md >> report.md
+          cat results.txt --md >> report.md
 
           # Report training history
           echo -e "## Plots\n### Training History" >> report.md
-          cml-publish plot.png --md >> report.md
+          echo "![inline](./plot.png)" >> report.md
           cml-send-comment report.md
