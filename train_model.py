@@ -179,7 +179,7 @@ def train_model(inp_model, num_epochs):
     fig.tight_layout()
     plt.savefig("plot.png")
 
-    with open('result.txt', 'w') as f:
+    with open('results.txt', 'w') as f:
         f.write("The previous best weights : " + checkpoint_path + "\n")
         f.write("Epochs that used : " + str(num_epochs) + "\n")
         f.write("Model that used :" + str(inp_model) + "\n")

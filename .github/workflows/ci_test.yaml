@@ -25,6 +25,6 @@ jobs:
           cat results.txt >> report.md
 
           # Report training history
-          echo -e "## Plots\n### Training History" >> report.md
+          echo "## Plots\n### Training Loss VS Val Loss" >> report.md
           echo '![](./plot.png)' >> report.md
           cml comment create report.md
