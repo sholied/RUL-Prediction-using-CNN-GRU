@@ -7,7 +7,8 @@ jobs:
     # container: ghcr.io/iterative/cml:0-dvc2-base1
     container: docker://ghcr.io/iterative/cml:0-dvc2-base1
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
       # may need to setup NodeJS & Python3 on e.g. self-hosted
       # - uses: actions/setup-node@v3
       #   with:
@@ -16,10 +17,12 @@ jobs:
       #   with:
       #     python-version: '3.x'
       - uses: iterative/setup-cml@v1
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
       - name: Train model
         run: |
-          # Your ML workflow goes here
-          pip install -r requirements.txt
           python train_model.py
       - name: Write CML report
         env:
@@ -27,5 +30,5 @@ jobs:
         run: |
           # Post reports as comments in GitHub PRs
           cat results.txt >> report.md
-          echo 'plot.png' >> report.md
+          echo '(./plot.png)' >> report.md
           cml comment create report.md
