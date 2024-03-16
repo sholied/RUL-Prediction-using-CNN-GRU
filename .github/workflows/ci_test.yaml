@@ -37,6 +37,7 @@ jobs:
           echo "## Plots\n### Training Loss VS Val Loss" >> report.md
           echo '![](./plot.png)' >> report.md
           cml comment create report.md
+          
   validate-model-ci:
     needs: train-model-ci
     runs-on: ubuntu-latest
