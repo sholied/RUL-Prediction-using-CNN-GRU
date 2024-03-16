@@ -25,18 +25,18 @@ jobs:
         run: |
           python train_model.py
 
-      - name: Write CML report
-        env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Report metrics
-          echo "## Result" >> report.md
-          cat results.txt >> report.md
+      # - name: Write CML report
+      #   env:
+      #     REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     # Report metrics
+      #     echo "## Result" >> report.md
+      #     cat results.txt >> report.md
 
-          # Report training history
-          echo "## Plots\n### Training Loss VS Val Loss" >> report.md
-          # echo '![](./plot.png)' >> report.md
-          cml comment create report.md
+      #     # Report training history
+      #     echo "## Plots\n### Training Loss VS Val Loss" >> report.md
+      #     # echo '![](./plot.png)' >> report.md
+      #     cml comment create report.md
 
   validate-model-ci:
     needs: train-model-ci
