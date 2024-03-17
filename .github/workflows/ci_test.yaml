@@ -4,11 +4,6 @@ on:
     types: [ opened, synchronize ]
     branches:
       - 'main'
-
-# permissions:
-#   contents: read
-#   pull-requests: read
-  
 jobs:
   train-model-ci:
     runs-on: ubuntu-latest
@@ -35,7 +30,7 @@ jobs:
 
           # Report training history
           echo "## Plots\n### Training Loss VS Val Loss" >> report.md
-          # echo '![](./plot.png)' >> report.md
+          echo '![](./plot.png)' >> report.md
           cml comment create report.md
 
   validate-model-ci:
