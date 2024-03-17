@@ -1,0 +1,5 @@
+The previous best weights : /Users/arkhanalalu/Documents/latihan/mlops-project/RUL-Prediction-using-CNN-GRU/model/engine20240316T2020/engine_model.h5
+Epochs that used : 5
+Model that used :single_gru
+Batch Size that used :512
+Total time training :413seconds
