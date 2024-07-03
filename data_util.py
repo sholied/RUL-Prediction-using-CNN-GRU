@@ -117,6 +117,8 @@ def transform(df, pipeline):
 
     # Transform all columns except id, cycle, and RUL
     cols_transform = df.columns.difference(['id', 'cycle', 'RUL'])
+    # Fit the pipeline on training data
+    pipeline.fit(df[cols_transform])  # Assuming `train_df` and `cols_transform` are defined
 
     xform_df = pd.DataFrame(pipeline.transform(df[cols_transform]),
                             columns=cols_transform,
