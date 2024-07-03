@@ -82,12 +82,11 @@ def calc_training_rul(df):
     df.drop('max', axis=1, inplace=True)
     return df
 
-def train_model(inp_model, num_epochs):
+def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     # Create the model
     if inp_model == "cnn_gru":
         model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels)
     elif inp_model == "single_gru":
-        num_cnn = 0
         model = model_gru(num_gru, sequence_length, num_features, num_labels)
     else:
         print("-------------------------------------------------------------------------\n")
@@ -372,16 +371,16 @@ if __name__ == "__main__":
     for num_gru in range(1, 4):
         args.model = 'single_gru'
         print("PROCESS NUMBER LAYER GRU : ", num_gru)
-        train_model(args.model, args.epochs)
+        train_model(args.model, args.epochs, num_gru=num_gru)
         time.sleep(1)
 
     print("Wait before starting the next loop...")
-    countdown(20)
+    countdown(5)
 
     for num_cnn in range(1, 4):
         # Iterate through GRU layers (2 to 3)
         for num_gru in range(2, 4):
             args.model = 'cnn_gru'
             print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_gru))
-            train_model(args.model, args.epochs)
+            train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_gru)
             time.sleep(1)
