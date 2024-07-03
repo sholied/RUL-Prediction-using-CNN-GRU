@@ -87,6 +87,7 @@ def train_model(inp_model, num_epochs):
     if inp_model == "cnn_gru":
         model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels)
     elif inp_model == "single_gru":
+        num_cnn = 0
         model = model_gru(num_gru, sequence_length, num_features, num_labels)
     else:
         print("-------------------------------------------------------------------------\n")
@@ -294,7 +295,7 @@ if __name__ == "__main__":
         "--epochs",
         required=False,
         type=int,
-        default="25",
+        default="15",
         help="number of epochs for training",
     )
 
