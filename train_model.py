@@ -18,11 +18,15 @@ from sklearn import preprocessing
 from sklearn.metrics import confusion_matrix, recall_score, precision_score
 from tqdm import tqdm, tqdm_notebook
 
+import sys
+sys.path.insert(0,'../')
+
 from data_generator import TSDataGenerator, split_data, create_generators
 from util import set_log_dir, rmse, r2_keras
 from util import LRDecay
 from data_util import *
 from model import *
+import testing
 
 MODEL_DIR = os.path.abspath("model")
 
@@ -61,6 +65,12 @@ def load_data(paths, col_names, sort_cols):
     df = df.sort_values(sort_cols)
     return df
 
+def countdown(seconds):
+    while seconds > 0:
+        print(f"Waiting for {seconds} seconds...", end='\r')
+        time.sleep(1)
+        seconds -= 1
+    print() 
 
 #Calculate Training DATA RUL
 def calc_training_rul(df):
@@ -187,9 +197,72 @@ def train_model(inp_model, num_epochs):
         f.write("Total time training :" + str(int(time_total)) + "seconds\n")
     print("The previous best weights: ", checkpoint_path)
     model.load_weights(checkpoint_path)
-    print("Total time: ", int(time_total), "seconds")
-    #print("Loading model: ", checkpoint_path)
-    print("-------------------------Finish----------------------")
+    print("Total time: ", int(time_total), " seconds")
+    print("-------------------------Finish Training----------------------")
+
+    # Testing phase
+    print("Starting model testing...")
+
+
+    list_dataset = ['FD001', 'FD002', 'FD003', 'FD004']
+
+    for dataset_name in list_dataset:
+
+        print("Starting testing dataset test{}.txt".format(dataset_name))
+
+        test_X_path = os.path.join(DATA_DIR, 'test_' + dataset_name + '.txt')
+        test_y_path = os.path.join(DATA_DIR, 'RUL_' + dataset_name + '.txt')
+
+        # Read in the features
+        test_df = load_data([test_X_path], cols, sort_cols)
+
+        # Read in the labels (RUL)
+        test_rul_df = load_rul_data([test_y_path], ['id', 'RUL_actual'])
+
+        # Calculate the RUL and merge back to the test dataframe
+        test_df = calc_test_rul(test_df, test_rul_df)
+
+        #transform dataset
+        test_df['cycle_norm'] = test_df['cycle']
+
+        norm_test_df = pd.DataFrame(pipeline.transform(test_df[cols_transform]), 
+                                    columns=cols_transform, 
+                                    index=test_df.index)
+        test_join_df = test_df[test_df.columns.difference(cols_transform)].join(norm_test_df)
+        test_df = test_join_df.reindex(columns = test_df.columns)
+        test_df = test_df.reset_index(drop=True)
+
+        test_data_generator = TSDataGenerator(test_df, 
+                                            feature_cols, 
+                                            label_cols,
+                                            batch_size=batch_size,
+                                            seq_length=sequence_length, 
+                                            randomize=False,
+                                            loop=False)
+        print("summaryyyy--------------------")
+        print(test_data_generator.print_summary())
+
+        X = []
+        y = []
+        for p in tqdm(test_data_generator.generate(), total=test_data_generator.summary()['max_iterations']):
+            X.append(p[0])
+            y.append(p[1])
+
+        test_X = np.vstack(X)
+        test_y = np.vstack(y)
+
+        score = model.evaluate(test_X, test_y, verbose=1, batch_size=batch_size)
+        print('DATASET :: test{}.txt :: Test score for model {} with layer GRU {} and CNN {}:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(dataset_name, inp_model, num_gru, num_cnn, *score))
+
+        # Saving scores to a text file
+        with open('test_result.txt', 'w') as file:
+            file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
+            file.write('-------------------------------------------------------------\n')
+            file.write('\tRMSE: {}\n'.format(score[0]))
+            file.write('\tMSE: {}\n'.format(score[1]))
+            file.write('\tR2: {}\n'.format(score[2]))
+
+    print("-------------------------Finish Testing----------------------")
 
 if __name__ == "__main__":
 
@@ -221,7 +294,7 @@ if __name__ == "__main__":
         "--epochs",
         required=False,
         type=int,
-        default="5",
+        default="100",
         help="number of epochs for training",
     )
 
@@ -274,13 +347,13 @@ if __name__ == "__main__":
     sequence_length = 25
 
     # Number of time series sequences that will be train on per batch.
-    batch_size = 512
+    batch_size = 256
 
     num_features = len(feature_cols)
     num_labels = len(label_cols)
 
-    num_cnn = 3
-    num_gru = 2
+    # num_cnn = 3
+    # num_gru = 1
 
 
     # Setup log directory
@@ -293,4 +366,21 @@ if __name__ == "__main__":
     pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
     joblib.dump(pipeline, pipeline_path) 
 
-    train_model(args.model, args.epochs)
+    print("========================START TRAINING MODEL===========================")
+
+    for num_gru in range(1, 4):
+        args.model = 'single_gru'
+        print("PROCESS NUMBER LAYER GRU : ", num_gru)
+        train_model(args.model, args.epochs)
+        time.sleep(1)
+
+    print("Wait before starting the next loop...")
+    countdown(20)
+
+    for num_cnn in range(1, 4):
+        # Iterate through GRU layers (2 to 3)
+        for num_gru in range(2, 4):
+            args.model = 'cnn_gru'
+            print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_gru))
+            train_model(args.model, args.epochs)
+            time.sleep(1)
