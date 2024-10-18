@@ -267,7 +267,8 @@ if __name__ == "__main__":
     print('Test score:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(*score))
 
     # Saving scores to a text file
-    test_result_filename = 'test_result.txt'
+    model_name = os.path.basename(checkpoint_path)
+    test_result_filename = 'test_result_{}.txt'.format(model_name)
     with open(test_result_filename, 'w') as file:
         file.write('Test score:\n')
         file.write('\tRMSE: {}\n'.format(score[0]))

@@ -60,6 +60,7 @@ jobs:
       - name: Test model
         env:
           SERVICE_ACCOUNT_FILE: './service_account.json'
+          FOLDER_ID: ${{ secrets.MODEL_SAVE_FOLDER_ID }}  # Replace with your actual folder ID or store in a GitHub secret
         run: |
           python testing.py
 

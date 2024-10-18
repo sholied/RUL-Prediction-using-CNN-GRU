@@ -138,9 +138,6 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
                                                                     loop=True,
                                                                     pad=False,
                                                                     verbose=True)
-        
-        
-        # Callbacks
 
         # Callbacks
         lr_decay = LRDecay(initial_lrate=lrate, epochs_step=epochs_before_decay)
@@ -157,14 +154,11 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
             steps_per_epoch=train_data_generator.summary()['max_iterations'],
             validation_steps=val_data_generator.summary()['max_iterations'],
             shuffle=False,
-            verbose=1,
+            verbose=0,
             callbacks=callbacks)
 
         if len(history.epoch) > 0:        
             initial_epoch = history.epoch[-1] + 1
-        
-        
-        # TODO fix, sometimes Keras is returning an empty history dict.
 
         # TODO fix, sometimes Keras is returning an empty history dict.
         try:
@@ -197,10 +191,10 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     ax2.legend(loc='lower left')
 
     fig.tight_layout()
-    plot_filename = "plot_train.png"
+    plot_filename = "plot_train_{}_cnn{}_gru{}.png".format(inp_model, num_cnn, num_gru)
     plt.savefig(plot_filename)
 
-    results_filename = 'results_train.txt'
+    results_filename = 'results_train_{}_cnn{}_gru{}.txt'.format(inp_model, num_cnn, num_gru)
     with open(results_filename, 'w') as f:
         f.write("The previous best weights : " + checkpoint_path + "\n")
         f.write("Epochs that used : " + str(num_epochs) + "\n")
@@ -269,7 +263,7 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         print('DATASET :: test{}.txt :: Test score for model {} with layer GRU {} and CNN {}:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(dataset_name, inp_model, num_gru, num_cnn, *score))
 
         # Saving scores to a text file
-        test_result_filename = 'evaluate_train_result.txt'
+        test_result_filename = 'evaluate_train_result_{}_{}_cnn{}_gru{}.txt'.format(dataset_name, inp_model, num_cnn, num_gru)
         with open(test_result_filename, 'w') as file:
             file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
             file.write('-------------------------------------------------------------\n')
@@ -374,21 +368,21 @@ if __name__ == "__main__":
     # num_gru = 1
 
 
-    # Setup log directory
-    log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine")
-
-    print("Log dir: ", log_dir)
-    print("Checkpoint path: ", checkpoint_path)
-
-    # Save the pipeline for later use
-    pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
-    joblib.dump(pipeline, pipeline_path) 
-
     print("========================START TRAINING MODEL===========================")
 
     for num_gru in range(1, 2):
         args.model = 'single_gru'
         print("PROCESS NUMBER LAYER GRU : ", num_gru)
+        # Setup log directory
+        log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}".format(args.model, num_gru))
+
+        print("Log dir: ", log_dir)
+        print("Checkpoint path: ", checkpoint_path)
+
+        # Save the pipeline for later use
+        pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+        joblib.dump(pipeline, pipeline_path) 
+
         train_model(args.model, args.epochs, num_gru=num_gru)
         time.sleep(1)
 
@@ -400,5 +394,15 @@ if __name__ == "__main__":
         for num_gru in range(2, 4):
             args.model = 'cnn_gru'
             print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_gru))
+            # Setup log directory
+            log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_gru))
+
+            print("Log dir: ", log_dir)
+            print("Checkpoint path: ", checkpoint_path)
+
+            # Save the pipeline for later use
+            pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+            joblib.dump(pipeline, pipeline_path) 
+
             train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_gru)
             time.sleep(1)
