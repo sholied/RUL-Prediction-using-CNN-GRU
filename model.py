@@ -32,6 +32,30 @@ def model_gru(num_gru, seq_length, num_features, num_labels):
     
     return model
 
+def model_lstm(num_lstm, seq_length, num_features, num_labels):
+    initial_unit = 256
+    n = num_lstm-1
+    model = Sequential()
+    model.add(LSTM(
+                input_shape=(seq_length, num_features),
+                units=initial_unit,
+                dropout=0.05,
+                return_sequences=True))
+    for i in range(n):
+        if (i+1) == n:
+          model.add(LSTM(units=int(initial_unit/(2*(i+1))),
+                        dropout=0.05,
+                        return_sequences=False))
+        else:
+          model.add(LSTM(units=int(initial_unit/(2*(i+1))),
+                        dropout=0.05,
+                        return_sequences=True))
+    model.add(Dense(units=64, activation='relu'))
+    model.add(Dense(units=32, activation='relu'))
+    model.add(Dense(units=num_labels, activation='relu'))
+    
+    return model
+
 def model_cnngru(num_cnn, num_gru, seq_length, num_features, num_labels):
     initial_unit = 256
     initial_filter = 128
@@ -57,6 +81,39 @@ def model_cnngru(num_cnn, num_gru, seq_length, num_features, num_labels):
                         return_sequences=False))
         else:
           model.add(GRU(units=int(initial_unit/(2*(i+1))),
+                        dropout=0.05,
+                        return_sequences=True))
+    model.add(Dense(units=64, activation='relu'))
+    model.add(Dense(units=32, activation='relu'))
+    model.add(Dense(units=num_labels, activation='relu'))
+    
+    return model
+
+def model_cnnlstm(num_cnn, num_lstm, seq_length, num_features, num_labels):
+    initial_unit = 256
+    initial_filter = 128
+    n = num_lstm-1
+    m = num_cnn-1
+    model = Sequential()
+    model.add(Conv1D(filters=initial_filter, kernel_size=3, strides=1 , activation='relu', padding='causal', 
+                     input_shape=(seq_length, num_features)))
+    model.add(MaxPooling1D(pool_size=2, strides=1, padding="valid"))
+    model.add(Dropout(0.05))
+    for j in range(m):
+        model.add(Conv1D(filters=int(initial_filter/(2*(j+1))), kernel_size=3, strides=1 , activation='relu', padding='causal'))
+        model.add(MaxPooling1D(pool_size=2, strides=1, padding="valid"))
+        model.add(Dropout(0.05))
+    model.add(LSTM(
+                units=initial_unit,
+                dropout=0.05,
+                return_sequences=True))
+    for i in range(n):
+        if (i+1) == n:
+          model.add(LSTM(units=int(initial_unit/(2*(i+1))),
+                        dropout=0.05,
+                        return_sequences=False))
+        else:
+          model.add(LSTM(units=int(initial_unit/(2*(i+1))),
                         dropout=0.05,
                         return_sequences=True))
     model.add(Dense(units=64, activation='relu'))

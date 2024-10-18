@@ -33,7 +33,7 @@ def find_or_create_folder(service, folder_name, parent_folder_id):
         return create_folder(service, folder_name, parent_folder_id)
 
 def upload_to_drive(file_name, folder_id, service):
-    file_metadata = {'name': file_name, 'parents': [folder_id]}
+    file_metadata = {'name': os.path.basename(file_name), 'parents': [folder_id]}
     media = MediaFileUpload(file_name, mimetype='application/octet-stream')
     uploaded_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
     print(f"Uploaded {file_name} to Google Drive with file ID: {uploaded_file.get('id')}")

@@ -43,7 +43,7 @@ sort_cols = ['id','cycle']
 # Google Drive setup
 SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
 # Define the folder name and path where the model will be saved
-folder_name = f"engine_{datetime.now().strftime('%Y%m%dT%H%M')}"
+folder_name = f"engine_{datetime.datetime.now().strftime('%Y%m%dT%H%M')}"
 parent_folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
