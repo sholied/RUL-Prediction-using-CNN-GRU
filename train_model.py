@@ -27,6 +27,10 @@ from util import LRDecay
 from data_util import *
 from model import *
 import testing
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+import os
 
 MODEL_DIR = os.path.abspath("model")
 
@@ -82,7 +86,22 @@ def calc_training_rul(df):
     df.drop('max', axis=1, inplace=True)
     return df
 
+
+def upload_to_drive(file_name, folder_id, service):
+    file_metadata = {'name': file_name, 'parents': [folder_id]}
+    media = MediaFileUpload(file_name, mimetype='application/octet-stream')
+    uploaded_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    print(f"Uploaded {file_name} to Google Drive with file ID: {uploaded_file.get('id')}")
+
+
 def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
+    # Google Drive setup
+    SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
+    folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+    SCOPES = ['https://www.googleapis.com/auth/drive.file']
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    drive_service = build('drive', 'v3', credentials=creds)
+
     # Create the model
     if inp_model == "cnn_gru":
         model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels)
@@ -92,8 +111,9 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         print("-------------------------------------------------------------------------\n")
         print("model incorrect, please choose one : single_gru or cnn_gru !\n")
         print("-------------------------------------------------------------------------\n")
+        return
 
-    model.compile(loss=rmse, optimizer='rmsprop',metrics=['mse',r2_keras])
+    model.compile(loss=rmse, optimizer='rmsprop', metrics=['mse', r2_keras])
 
     print(model.summary())
 
@@ -103,10 +123,8 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     epochs_before_decay = 15
     lrate = 1e-3
     patience = 100
-        
-    tensorboard = TensorBoard(log_dir=log_dir,
-                            histogram_freq=0, write_graph=True, write_images=False)
 
+    tensorboard = TensorBoard(log_dir=log_dir, histogram_freq=0, write_graph=True, write_images=False)
     checkpointer = ModelCheckpoint(checkpoint_path, verbose=1, save_best_only=True)
 
     epoch_loss_history = []
@@ -114,7 +132,6 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     epoch_lr_history = []
 
     for tr_run in range(training_runs):
-
         print("Training run: {}, epoch: {}".format(tr_run, initial_epoch))
 
         t_df, v_df = split_data(train_df, randomize=True, train_pct=.8)
@@ -128,15 +145,16 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
                                                                     pad=False,
                                                                     verbose=True)
         
+        
+        # Callbacks
+
         # Callbacks
         lr_decay = LRDecay(initial_lrate=lrate, epochs_step=epochs_before_decay)
         lr_scheduler = LearningRateScheduler(lr_decay.step_decay, verbose=1)
-        
         earlystopper = EarlyStopping(patience=patience, verbose=1)
-        
-        callbacks = [ tensorboard, checkpointer, lr_scheduler, earlystopper]
 
-        # fit the network
+        callbacks = [tensorboard, checkpointer, lr_scheduler, earlystopper]
+
         history = model.fit(
             train_data_generator.generate(), 
             validation_data=val_data_generator.generate(), 
@@ -146,24 +164,25 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
             validation_steps=val_data_generator.summary()['max_iterations'],
             shuffle=False,
             verbose=1,
-            callbacks=callbacks )
-        
-        # pick up after the last epoch
+            callbacks=callbacks)
+
         if len(history.epoch) > 0:        
             initial_epoch = history.epoch[-1] + 1
         
+        
+        # TODO fix, sometimes Keras is returning an empty history dict.
+
         # TODO fix, sometimes Keras is returning an empty history dict.
         try:
-            # Save loss/val metrics
             epoch_loss_history += history.history['loss']
             epoch_val_history += history.history['val_loss']
             epoch_lr_history += lr_decay.history_lr
         except:
             pass
+    
     time_total = time.time() - start
 
     fig, ax1 = plt.subplots(figsize=(10,6))
-
     epochs = np.arange(len(epoch_loss_history))
     ax1.plot(epochs, epoch_loss_history, label='loss')
     ax1.plot(epochs, epoch_val_history, label='val_loss')
@@ -172,24 +191,23 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     ax1.set_ylim(0)
     ax1.legend()
 
-    # Add a rhs scale for the LR.
     ax2 = ax1.twinx()
     lr_epochs = []
     lr_steps = []
-
     for e1, l1, l2 in epoch_lr_history:
         lr_epochs.append(e1)
         lr_steps.append(l1)
-
 
     ax2.plot(lr_epochs, lr_steps, 'r.', label='lr')
     ax2.set_ylabel("Learning Rate")
     ax2.legend(loc='lower left')
 
     fig.tight_layout()
-    plt.savefig("plot.png")
+    plot_filename = "plot.png"
+    plt.savefig(plot_filename)
 
-    with open('results.txt', 'w') as f:
+    results_filename = 'results.txt'
+    with open(results_filename, 'w') as f:
         f.write("The previous best weights : " + checkpoint_path + "\n")
         f.write("Epochs that used : " + str(num_epochs) + "\n")
         f.write("Model that used :" + str(inp_model) + "\n")
@@ -200,14 +218,16 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     print("Total time: ", int(time_total), " seconds")
     print("-------------------------Finish Training----------------------")
 
+    # Uploading files to Google Drive
+    upload_to_drive(checkpoint_path, folder_id, drive_service)  # Upload the best model weights
+    upload_to_drive(plot_filename, folder_id, drive_service)  # Upload the loss/val_loss plot
+    upload_to_drive(results_filename, folder_id, drive_service)  # Upload the training result summary
+
     # Testing phase
     print("Starting model testing...")
-
-
     list_dataset = ['FD001', 'FD002', 'FD003', 'FD004']
 
     for dataset_name in list_dataset:
-
         print("Starting testing dataset test{}.txt".format(dataset_name))
 
         test_X_path = os.path.join(DATA_DIR, 'test_' + dataset_name + '.txt')
@@ -255,12 +275,16 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         print('DATASET :: test{}.txt :: Test score for model {} with layer GRU {} and CNN {}:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(dataset_name, inp_model, num_gru, num_cnn, *score))
 
         # Saving scores to a text file
-        with open('test_result.txt', 'w') as file:
+        test_result_filename = 'test_result.txt'
+        with open(test_result_filename, 'w') as file:
             file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
             file.write('-------------------------------------------------------------\n')
             file.write('\tRMSE: {}\n'.format(score[0]))
             file.write('\tMSE: {}\n'.format(score[1]))
             file.write('\tR2: {}\n'.format(score[2]))
+
+        # Upload test results
+        upload_to_drive(test_result_filename, folder_id, drive_service)
 
     print("-------------------------Finish Testing----------------------")
 
@@ -368,7 +392,7 @@ if __name__ == "__main__":
 
     print("========================START TRAINING MODEL===========================")
 
-    for num_gru in range(1, 4):
+    for num_gru in range(1, 2):
         args.model = 'single_gru'
         print("PROCESS NUMBER LAYER GRU : ", num_gru)
         train_model(args.model, args.epochs, num_gru=num_gru)
@@ -377,7 +401,7 @@ if __name__ == "__main__":
     print("Wait before starting the next loop...")
     countdown(5)
 
-    for num_cnn in range(1, 4):
+    for num_cnn in range(1, 2):
         # Iterate through GRU layers (2 to 3)
         for num_gru in range(2, 4):
             args.model = 'cnn_gru'
