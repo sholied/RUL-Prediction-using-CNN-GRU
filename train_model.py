@@ -225,61 +225,61 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         file.write('Comparison of Test Scores for model {} with CNN layers {} and GRU layers {}:\n'.format(inp_model, num_cnn, num_gru))
         file.write('=================================================================\n')
 
-    for dataset_name in list_dataset:
-        print("Starting testing dataset test{}.txt".format(dataset_name))
+        for dataset_name in list_dataset:
+            print("Starting testing dataset test{}.txt".format(dataset_name))
 
-        test_X_path = os.path.join(DATA_DIR, 'test_' + dataset_name + '.txt')
-        test_y_path = os.path.join(DATA_DIR, 'RUL_' + dataset_name + '.txt')
+            test_X_path = os.path.join(DATA_DIR, 'test_' + dataset_name + '.txt')
+            test_y_path = os.path.join(DATA_DIR, 'RUL_' + dataset_name + '.txt')
 
-        # Read in the features
-        test_df = load_data([test_X_path], cols, sort_cols)
+            # Read in the features
+            test_df = load_data([test_X_path], cols, sort_cols)
 
-        # Read in the labels (RUL)
-        test_rul_df = load_rul_data([test_y_path], ['id', 'RUL_actual'])
+            # Read in the labels (RUL)
+            test_rul_df = load_rul_data([test_y_path], ['id', 'RUL_actual'])
 
-        # Calculate the RUL and merge back to the test dataframe
-        test_df = calc_test_rul(test_df, test_rul_df)
+            # Calculate the RUL and merge back to the test dataframe
+            test_df = calc_test_rul(test_df, test_rul_df)
 
-        # Transform dataset
-        test_df['cycle_norm'] = test_df['cycle']
+            # Transform dataset
+            test_df['cycle_norm'] = test_df['cycle']
 
-        norm_test_df = pd.DataFrame(pipeline.transform(test_df[cols_transform]), 
-                                    columns=cols_transform, 
-                                    index=test_df.index)
-        test_join_df = test_df[test_df.columns.difference(cols_transform)].join(norm_test_df)
-        test_df = test_join_df.reindex(columns=test_df.columns)
-        test_df = test_df.reset_index(drop=True)
+            norm_test_df = pd.DataFrame(pipeline.transform(test_df[cols_transform]), 
+                                        columns=cols_transform, 
+                                        index=test_df.index)
+            test_join_df = test_df[test_df.columns.difference(cols_transform)].join(norm_test_df)
+            test_df = test_join_df.reindex(columns=test_df.columns)
+            test_df = test_df.reset_index(drop=True)
 
-        test_data_generator = TSDataGenerator(test_df, 
-                                              feature_cols, 
-                                              label_cols,
-                                              batch_size=batch_size,
-                                              seq_length=sequence_length, 
-                                              randomize=False,
-                                              loop=False)
+            test_data_generator = TSDataGenerator(test_df, 
+                                                  feature_cols, 
+                                                  label_cols,
+                                                  batch_size=batch_size,
+                                                  seq_length=sequence_length, 
+                                                  randomize=False,
+                                                  loop=False)
 
-        print("summaryyyy--------------------")
-        print(test_data_generator.print_summary())
+            print("summaryyyy--------------------")
+            print(test_data_generator.print_summary())
 
-        X = []
-        y = []
-        for p in tqdm(test_data_generator.generate(), total=test_data_generator.summary()['max_iterations']):
-            X.append(p[0])
-            y.append(p[1])
+            X = []
+            y = []
+            for p in tqdm(test_data_generator.generate(), total=test_data_generator.summary()['max_iterations']):
+                X.append(p[0])
+                y.append(p[1])
 
-        test_X = np.vstack(X)
-        test_y = np.vstack(y)
+            test_X = np.vstack(X)
+            test_y = np.vstack(y)
 
-        # Evaluate the model
-        score = model.evaluate(test_X, test_y, verbose=1, batch_size=batch_size)
-        print('DATASET :: test{}.txt :: Test score for model {} with layer GRU {} and CNN {}:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(dataset_name, inp_model, num_gru, num_cnn, *score))
+            # Evaluate the model
+            score = model.evaluate(test_X, test_y, verbose=1, batch_size=batch_size)
+            print('DATASET :: test{}.txt :: Test score for model {} with layer GRU {} and CNN {}:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(dataset_name, inp_model, num_gru, num_cnn, *score))
 
-        # Append results to the comparison file
-        file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
-        file.write('-------------------------------------------------------------\n')
-        file.write('\tRMSE: {}\n'.format(score[0]))
-        file.write('\tMSE: {}\n'.format(score[1]))
-        file.write('\tR2: {}\n\n'.format(score[2]))
+            # Append results to the comparison file
+            file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
+            file.write('-------------------------------------------------------------\n')
+            file.write('\tRMSE: {}\n'.format(score[0]))
+            file.write('\tMSE: {}\n'.format(score[1]))
+            file.write('\tR2: {}\n\n'.format(score[2]))
 
         # # Optional: You can also upload intermediate results per dataset if needed
         # test_result_filename = 'evaluate_train_result_{}_{}_cnn{}_gru{}.txt'.format(dataset_name, inp_model, num_cnn, num_gru)
@@ -391,7 +391,6 @@ if __name__ == "__main__":
 
 
     print("========================START TRAINING MODEL===========================")
-
     # for num_gru in range(2, 5):
     for num_gru in range(1, 2):
         args.model = 'single_gru'
