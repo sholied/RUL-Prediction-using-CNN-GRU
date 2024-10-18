@@ -98,10 +98,24 @@ def calc_training_rul(df):
 def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     # Create the model
     if inp_model == "cnn_gru":
+        plot_filename = "plot_train_{}_cnn{}_gru{}.png".format(inp_model, num_cnn, num_gru)
+        results_filename = 'results_train_{}_cnn{}_gru{}.txt'.format(inp_model, num_cnn, num_gru)
         model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels)
     elif inp_model == "single_gru":
+        plot_filename = "plot_train_{}_gru{}.png".format(inp_model, num_cnn, num_gru)
+        results_filename = 'results_train_{}_gru{}.txt'.format(inp_model, num_cnn, num_gru)
         model = model_gru(num_gru, sequence_length, num_features, num_labels)
+    elif inp_model == "single_lstm":
+        plot_filename = "plot_train_{}_lstm{}.png".format(inp_model, num_cnn, num_gru)
+        results_filename = 'results_train_{}_lstm{}.txt'.format(inp_model, num_cnn, num_gru)
+        model = model_cnnlstm(num_cnn, num_gru, sequence_length, num_features, num_labels)
+    elif inp_model == "cnn_lstm":
+        plot_filename = "plot_train_{}_cnn{}_lstm{}.png".format(inp_model, num_cnn, num_gru)
+        results_filename = 'results_train_{}_cnn{}_lstm{}.txt'.format(inp_model, num_cnn, num_gru)
+        model = model_cnnlstm(num_cnn, num_gru, sequence_length, num_features, num_labels)
     else:
+        plot_filename = "plot_train_{}_{}_{}.png".format(inp_model, num_cnn, num_gru)
+        results_filename = 'results_train_{}_{}_{}.txt'.format(inp_model, num_cnn, num_gru)
         print("-------------------------------------------------------------------------\n")
         print("model incorrect, please choose one : single_gru or cnn_gru !\n")
         print("-------------------------------------------------------------------------\n")
@@ -191,10 +205,8 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     ax2.legend(loc='lower left')
 
     fig.tight_layout()
-    plot_filename = "plot_train_{}_cnn{}_gru{}.png".format(inp_model, num_cnn, num_gru)
     plt.savefig(plot_filename)
 
-    results_filename = 'results_train_{}_cnn{}_gru{}.txt'.format(inp_model, num_cnn, num_gru)
     with open(results_filename, 'w') as f:
         f.write("The previous best weights : " + checkpoint_path + "\n")
         f.write("Epochs that used : " + str(num_epochs) + "\n")
@@ -386,23 +398,63 @@ if __name__ == "__main__":
         train_model(args.model, args.epochs, num_gru=num_gru)
         time.sleep(1)
 
-    print("Wait before starting the next loop...")
+    print("Wait before starting the next 2nd loop...")
     countdown(5)
 
-    for num_cnn in range(1, 2):
-        # Iterate through GRU layers (2 to 3)
-        for num_gru in range(2, 4):
-            args.model = 'cnn_gru'
-            print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_gru))
-            # Setup log directory
-            log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_gru))
+    for num_lstm in range(1, 2):
+        args.model = 'single_lstm'
+        print("PROCESS NUMBER LAYER LSTM : ", num_lstm)
+        # Setup log directory
+        log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}".format(args.model, num_lstm))
 
-            print("Log dir: ", log_dir)
-            print("Checkpoint path: ", checkpoint_path)
+        print("Log dir: ", log_dir)
+        print("Checkpoint path: ", checkpoint_path)
 
-            # Save the pipeline for later use
-            pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
-            joblib.dump(pipeline, pipeline_path) 
+        # Save the pipeline for later use
+        pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+        joblib.dump(pipeline, pipeline_path) 
 
-            train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_gru)
-            time.sleep(1)
+        train_model(args.model, args.epochs, num_gru=num_lstm)
+        time.sleep(1)
+
+    print("Wait before starting the next 3rd loop...")
+    countdown(5)
+
+    # for num_cnn in range(1, 2):
+    #     # Iterate through GRU layers (2 to 3)
+    #     for num_gru in range(2, 4):
+    #         args.model = 'cnn_gru'
+    #         print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_gru))
+    #         # Setup log directory
+    #         log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_gru))
+
+    #         print("Log dir: ", log_dir)
+    #         print("Checkpoint path: ", checkpoint_path)
+
+    #         # Save the pipeline for later use
+    #         pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+    #         joblib.dump(pipeline, pipeline_path) 
+
+    #         train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_gru)
+    #         time.sleep(1)
+
+    # print("Wait before starting the next 4th loop...")
+    # countdown(5)
+
+    # for num_cnn in range(1, 2):
+    #     # Iterate through GRU layers (2 to 3)
+    #     for num_lstm in range(2, 4):
+    #         args.model = 'cnn_gru'
+    #         print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_lstm))
+    #         # Setup log directory
+    #         log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_lstm))
+
+    #         print("Log dir: ", log_dir)
+    #         print("Checkpoint path: ", checkpoint_path)
+
+    #         # Save the pipeline for later use
+    #         pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+    #         joblib.dump(pipeline, pipeline_path) 
+
+    #         train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_lstm)
+    #         time.sleep(1)

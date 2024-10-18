@@ -40,17 +40,17 @@ cols.extend(sensor_cols)
 
 sort_cols = ['id','cycle']
 
-# Google Drive setup
-SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
-# Define the folder name and path where the model will be saved
-folder_name = f"engine_{datetime.datetime.now().strftime('%Y%m%dT%H%M')}"
-parent_folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+# # Google Drive setup
+# SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
+# # Define the folder name and path where the model will be saved
+# folder_name = f"engine_test_{datetime.datetime.now().strftime('%Y%m%dT%H%M')}"
+# parent_folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
 
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-drive_service = build('drive', 'v3', credentials=creds)
-# Create or find the folder
-folder_id = find_or_create_folder(drive_service, folder_name, parent_folder_id)
+# SCOPES = ['https://www.googleapis.com/auth/drive.file']
+# creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+# drive_service = build('drive', 'v3', credentials=creds)
+# # Create or find the folder
+# folder_id = find_or_create_folder(drive_service, folder_name, parent_folder_id)
 
 def load_rul_data(paths, col_names):
     
@@ -109,7 +109,7 @@ def plot_prediction(rul_actual, rul_predicted):
     plt.legend()
     plot_filename = "plot_prediction.png"
     plt.savefig(plot_filename)
-    upload_to_drive(plot_filename, folder_id, drive_service)
+    # upload_to_drive(plot_filename, folder_id, drive_service)
 
 
 if __name__ == "__main__":
@@ -275,7 +275,7 @@ if __name__ == "__main__":
         file.write('\tMSE: {}\n'.format(score[1]))
         file.write('\tR2: {}\n'.format(score[2]))
 
-    upload_to_drive(test_result_filename, folder_id, drive_service)
+    # upload_to_drive(test_result_filename, folder_id, drive_service)
 
     test_data_generator = TSDataGenerator(test_df, feature_cols, label_cols, batch_size=batch_size, seq_length=sequence_length, loop=False)
 
