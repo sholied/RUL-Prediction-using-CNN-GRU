@@ -219,6 +219,12 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     print("Starting model testing...")
     list_dataset = ['FD001', 'FD002', 'FD003', 'FD004']
 
+    # Create a single results file for all datasets
+    compare_result_filename = 'compare_train_results_{}_cnn{}_gru{}.txt'.format(inp_model, num_cnn, num_gru)
+    with open(compare_result_filename, 'w') as file:
+        file.write('Comparison of Test Scores for model {} with CNN layers {} and GRU layers {}:\n'.format(inp_model, num_cnn, num_gru))
+        file.write('=================================================================\n')
+
     for dataset_name in list_dataset:
         print("Starting testing dataset test{}.txt".format(dataset_name))
 
@@ -234,23 +240,24 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         # Calculate the RUL and merge back to the test dataframe
         test_df = calc_test_rul(test_df, test_rul_df)
 
-        #transform dataset
+        # Transform dataset
         test_df['cycle_norm'] = test_df['cycle']
 
         norm_test_df = pd.DataFrame(pipeline.transform(test_df[cols_transform]), 
                                     columns=cols_transform, 
                                     index=test_df.index)
         test_join_df = test_df[test_df.columns.difference(cols_transform)].join(norm_test_df)
-        test_df = test_join_df.reindex(columns = test_df.columns)
+        test_df = test_join_df.reindex(columns=test_df.columns)
         test_df = test_df.reset_index(drop=True)
 
         test_data_generator = TSDataGenerator(test_df, 
-                                            feature_cols, 
-                                            label_cols,
-                                            batch_size=batch_size,
-                                            seq_length=sequence_length, 
-                                            randomize=False,
-                                            loop=False)
+                                              feature_cols, 
+                                              label_cols,
+                                              batch_size=batch_size,
+                                              seq_length=sequence_length, 
+                                              randomize=False,
+                                              loop=False)
+
         print("summaryyyy--------------------")
         print(test_data_generator.print_summary())
 
@@ -263,20 +270,31 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         test_X = np.vstack(X)
         test_y = np.vstack(y)
 
+        # Evaluate the model
         score = model.evaluate(test_X, test_y, verbose=1, batch_size=batch_size)
         print('DATASET :: test{}.txt :: Test score for model {} with layer GRU {} and CNN {}:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(dataset_name, inp_model, num_gru, num_cnn, *score))
 
-        # Saving scores to a text file
-        test_result_filename = 'evaluate_train_result_{}_{}_cnn{}_gru{}.txt'.format(dataset_name, inp_model, num_cnn, num_gru)
-        with open(test_result_filename, 'w') as file:
-            file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
-            file.write('-------------------------------------------------------------\n')
-            file.write('\tRMSE: {}\n'.format(score[0]))
-            file.write('\tMSE: {}\n'.format(score[1]))
-            file.write('\tR2: {}\n'.format(score[2]))
+        # Append results to the comparison file
+        file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
+        file.write('-------------------------------------------------------------\n')
+        file.write('\tRMSE: {}\n'.format(score[0]))
+        file.write('\tMSE: {}\n'.format(score[1]))
+        file.write('\tR2: {}\n\n'.format(score[2]))
 
-        # Upload test results
-        upload_to_drive(test_result_filename, folder_id, drive_service)
+        # # Optional: You can also upload intermediate results per dataset if needed
+        # test_result_filename = 'evaluate_train_result_{}_{}_cnn{}_gru{}.txt'.format(dataset_name, inp_model, num_cnn, num_gru)
+        # with open(test_result_filename, 'w') as individual_file:
+        #     individual_file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
+        #     individual_file.write('-------------------------------------------------------------\n')
+        #     individual_file.write('\tRMSE: {}\n'.format(score[0]))
+        #     individual_file.write('\tMSE: {}\n'.format(score[1]))
+        #     individual_file.write('\tR2: {}\n'.format(score[2]))
+
+        # # Upload individual test results
+        # upload_to_drive(test_result_filename, folder_id, drive_service)
+
+    # Upload the overall comparison file to the drive
+    upload_to_drive(compare_result_filename, folder_id, drive_service)
 
     print("-------------------------Finish Testing----------------------")
 
@@ -374,6 +392,7 @@ if __name__ == "__main__":
 
     print("========================START TRAINING MODEL===========================")
 
+    # for num_gru in range(2, 5):
     for num_gru in range(1, 2):
         args.model = 'single_gru'
         print("PROCESS NUMBER LAYER GRU : ", num_gru)
@@ -390,31 +409,31 @@ if __name__ == "__main__":
         train_model(args.model, args.epochs, num_gru=num_gru)
         time.sleep(1)
 
-    print("Wait before starting the next 2nd loop...")
-    countdown(5)
+    # print("Wait before starting the next 2nd loop...")
+    # countdown(5)
 
-    for num_lstm in range(1, 2):
-        args.model = 'single_lstm'
-        print("PROCESS NUMBER LAYER LSTM : ", num_lstm)
-        # Setup log directory
-        log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}".format(args.model, num_lstm))
+    # for num_lstm in range(2, 5):
+    #     args.model = 'single_lstm'
+    #     print("PROCESS NUMBER LAYER LSTM : ", num_lstm)
+    #     # Setup log directory
+    #     log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}".format(args.model, num_lstm))
 
-        print("Log dir: ", log_dir)
-        print("Checkpoint path: ", checkpoint_path)
+    #     print("Log dir: ", log_dir)
+    #     print("Checkpoint path: ", checkpoint_path)
 
-        # Save the pipeline for later use
-        pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
-        joblib.dump(pipeline, pipeline_path) 
+    #     # Save the pipeline for later use
+    #     pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+    #     joblib.dump(pipeline, pipeline_path) 
 
-        train_model(args.model, args.epochs, num_gru=num_lstm)
-        time.sleep(1)
+    #     train_model(args.model, args.epochs, num_gru=num_lstm)
+    #     time.sleep(1)
 
-    print("Wait before starting the next 3rd loop...")
-    countdown(5)
+    # print("Wait before starting the next 3rd loop...")
+    # countdown(5)
 
-    # for num_cnn in range(1, 2):
+    # for num_cnn in range(1, 4):
     #     # Iterate through GRU layers (2 to 3)
-    #     for num_gru in range(2, 4):
+    #     for num_gru in range(1, 4):
     #         args.model = 'cnn_gru'
     #         print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_gru))
     #         # Setup log directory
@@ -433,11 +452,11 @@ if __name__ == "__main__":
     # print("Wait before starting the next 4th loop...")
     # countdown(5)
 
-    # for num_cnn in range(1, 2):
+    # for num_cnn in range(1, 4):
     #     # Iterate through GRU layers (2 to 3)
-    #     for num_lstm in range(2, 4):
-    #         args.model = 'cnn_gru'
-    #         print("PROCESS NUMBER LAYER CNN : {} AND LAYER GRU : {}".format(num_cnn, num_lstm))
+    #     for num_lstm in range(1, 4):
+    #         args.model = 'cnn_lstm'
+    #         print("PROCESS NUMBER LAYER CNN : {} AND LAYER LSTM : {}".format(num_cnn, num_lstm))
     #         # Setup log directory
     #         log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_lstm))
 
