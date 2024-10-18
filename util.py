@@ -41,7 +41,6 @@ def upload_to_drive(file_name, folder_id, service):
 def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=True):
     # Directory for training logs
     now = datetime.datetime.now()
-
     now_str = "{:%Y%m%dT%H%M}".format(now)
     log_dir = os.path.join(model_dir, "{}{}".format(name.lower(), now_str))
 
@@ -53,7 +52,6 @@ def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=Tru
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), log_dir)
 
     # Path to save after each epoch. Include epoch and val loss
-    # placeholders that gets filled by Keras.
     checkpoint_path = os.path.join(log_dir, "{}_model_*epoch*_*val_loss*.h5".format(name.lower()))
 
     if val_loss:

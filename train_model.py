@@ -312,7 +312,7 @@ if __name__ == "__main__":
         "--epochs",
         required=False,
         type=int,
-        default="2",
+        default="1",
         help="number of epochs for training",
     )
 
