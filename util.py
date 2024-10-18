@@ -9,6 +9,29 @@ import tensorflow as tf
 from googleapiclient.http import MediaFileUpload
 
 
+# Check if the folder exists
+def create_folder(service, folder_name, parent_folder_id):
+    folder_metadata = {
+        'name': folder_name,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [parent_folder_id]  # Specify the parent folder ID
+    }
+    folder = service.files().create(body=folder_metadata, fields='id').execute()
+    return folder.get('id')
+
+# Try to find the folder first; if not found, create it
+def find_or_create_folder(service, folder_name, parent_folder_id):
+    query = f"'{parent_folder_id}' in parents and name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
+    results = service.files().list(q=query, fields='files(id, name)').execute()
+    folders = results.get('files', [])
+    
+    if folders:
+        # Folder exists, return the ID
+        return folders[0].get('id')
+    else:
+        # Folder does not exist, create it
+        return create_folder(service, folder_name, parent_folder_id)
+
 def upload_to_drive(file_name, folder_id, service):
     file_metadata = {'name': file_name, 'parents': [folder_id]}
     media = MediaFileUpload(file_name, mimetype='application/octet-stream')

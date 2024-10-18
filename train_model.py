@@ -22,11 +22,12 @@ import sys
 sys.path.insert(0,'../')
 
 from data_generator import TSDataGenerator, split_data, create_generators
-from util import set_log_dir, rmse, r2_keras, upload_to_drive
+from util import set_log_dir, rmse, r2_keras, upload_to_drive, find_or_create_folder
 from util import LRDecay
 from data_util import *
 from model import *
 import testing
+import datetime
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
@@ -51,10 +52,15 @@ sort_cols = ['id','cycle']
 
 # Google Drive setup
 SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
-folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+# Define the folder name and path where the model will be saved
+folder_name = f"engine_{datetime.now().strftime('%Y%m%dT%H%M')}"
+parent_folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 drive_service = build('drive', 'v3', credentials=creds)
+# Create or find the folder
+folder_id = find_or_create_folder(drive_service, folder_name, parent_folder_id)
 
 def load_data(paths, col_names, sort_cols):
     # read data 

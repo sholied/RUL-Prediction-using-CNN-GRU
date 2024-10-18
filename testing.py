@@ -19,12 +19,13 @@ from sklearn.metrics import confusion_matrix, recall_score, precision_score
 from tqdm.notebook import tqdm
 
 from data_generator import TSDataGenerator, split_data, create_generators
-from util import set_log_dir, rmse, r2_keras, upload_to_drive
+from util import set_log_dir, rmse, r2_keras, upload_to_drive, find_or_create_folder
 from util import LRDecay
 from data_util import *
 from model import *
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+import datetime
 
 #Load Dataset from folder
 cols = ['id', 'cycle' ]
@@ -41,10 +42,15 @@ sort_cols = ['id','cycle']
 
 # Google Drive setup
 SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
-folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+# Define the folder name and path where the model will be saved
+folder_name = f"engine_{datetime.now().strftime('%Y%m%dT%H%M')}"
+parent_folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 drive_service = build('drive', 'v3', credentials=creds)
+# Create or find the folder
+folder_id = find_or_create_folder(drive_service, folder_name, parent_folder_id)
 
 def load_rul_data(paths, col_names):
     
