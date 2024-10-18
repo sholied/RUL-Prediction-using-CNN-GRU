@@ -22,15 +22,13 @@ import sys
 sys.path.insert(0,'../')
 
 from data_generator import TSDataGenerator, split_data, create_generators
-from util import set_log_dir, rmse, r2_keras
+from util import set_log_dir, rmse, r2_keras, upload_to_drive
 from util import LRDecay
 from data_util import *
 from model import *
 import testing
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-import os
 
 MODEL_DIR = os.path.abspath("model")
 
@@ -51,6 +49,12 @@ cols.extend(sensor_cols)
 
 sort_cols = ['id','cycle']
 
+# Google Drive setup
+SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
+folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+drive_service = build('drive', 'v3', credentials=creds)
 
 def load_data(paths, col_names, sort_cols):
     # read data 
@@ -86,22 +90,7 @@ def calc_training_rul(df):
     df.drop('max', axis=1, inplace=True)
     return df
 
-
-def upload_to_drive(file_name, folder_id, service):
-    file_metadata = {'name': file_name, 'parents': [folder_id]}
-    media = MediaFileUpload(file_name, mimetype='application/octet-stream')
-    uploaded_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-    print(f"Uploaded {file_name} to Google Drive with file ID: {uploaded_file.get('id')}")
-
-
 def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
-    # Google Drive setup
-    SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
-    folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
-    SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    drive_service = build('drive', 'v3', credentials=creds)
-
     # Create the model
     if inp_model == "cnn_gru":
         model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels)
@@ -203,10 +192,10 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     ax2.legend(loc='lower left')
 
     fig.tight_layout()
-    plot_filename = "plot.png"
+    plot_filename = "plot_train.png"
     plt.savefig(plot_filename)
 
-    results_filename = 'results.txt'
+    results_filename = 'results_train.txt'
     with open(results_filename, 'w') as f:
         f.write("The previous best weights : " + checkpoint_path + "\n")
         f.write("Epochs that used : " + str(num_epochs) + "\n")
@@ -275,7 +264,7 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         print('DATASET :: test{}.txt :: Test score for model {} with layer GRU {} and CNN {}:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(dataset_name, inp_model, num_gru, num_cnn, *score))
 
         # Saving scores to a text file
-        test_result_filename = 'test_result.txt'
+        test_result_filename = 'evaluate_train_result.txt'
         with open(test_result_filename, 'w') as file:
             file.write('DATASET :: test{}.txt Test score for model {} with layer GRU {} and CNN {}:\n'.format(dataset_name, inp_model, num_gru, num_cnn))
             file.write('-------------------------------------------------------------\n')
@@ -318,7 +307,7 @@ if __name__ == "__main__":
         "--epochs",
         required=False,
         type=int,
-        default="15",
+        default="2",
         help="number of epochs for training",
     )
 

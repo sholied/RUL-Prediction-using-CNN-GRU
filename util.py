@@ -6,7 +6,14 @@ import glob
 import numpy as np
 from keras import backend as K
 import tensorflow as tf
+from googleapiclient.http import MediaFileUpload
 
+
+def upload_to_drive(file_name, folder_id, service):
+    file_metadata = {'name': file_name, 'parents': [folder_id]}
+    media = MediaFileUpload(file_name, mimetype='application/octet-stream')
+    uploaded_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    print(f"Uploaded {file_name} to Google Drive with file ID: {uploaded_file.get('id')}")
 
 def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=True):
     # Directory for training logs

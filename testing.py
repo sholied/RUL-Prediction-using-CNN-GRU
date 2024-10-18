@@ -19,10 +19,12 @@ from sklearn.metrics import confusion_matrix, recall_score, precision_score
 from tqdm.notebook import tqdm
 
 from data_generator import TSDataGenerator, split_data, create_generators
-from util import set_log_dir, rmse, r2_keras
+from util import set_log_dir, rmse, r2_keras, upload_to_drive
 from util import LRDecay
 from data_util import *
 from model import *
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 
 #Load Dataset from folder
 cols = ['id', 'cycle' ]
@@ -37,6 +39,12 @@ cols.extend(sensor_cols)
 
 sort_cols = ['id','cycle']
 
+# Google Drive setup
+SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
+folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+drive_service = build('drive', 'v3', credentials=creds)
 
 def load_rul_data(paths, col_names):
     
@@ -93,7 +101,9 @@ def plot_prediction(rul_actual, rul_predicted):
     plt.ylim(0)
 
     plt.legend()
-    plt.savefig("plot_prediction.png")
+    plot_filename = "plot_prediction.png"
+    plt.savefig(plot_filename)
+    upload_to_drive(plot_filename, folder_id, drive_service)
 
 
 if __name__ == "__main__":
@@ -251,12 +261,14 @@ if __name__ == "__main__":
     print('Test score:\n\tRMSE: {}\n\tMSE: {}\n\tR2: {}'.format(*score))
 
     # Saving scores to a text file
-    with open('test_result.txt', 'w') as file:
+    test_result_filename = 'test_result.txt'
+    with open(test_result_filename, 'w') as file:
         file.write('Test score:\n')
         file.write('\tRMSE: {}\n'.format(score[0]))
         file.write('\tMSE: {}\n'.format(score[1]))
         file.write('\tR2: {}\n'.format(score[2]))
 
+    upload_to_drive(test_result_filename, folder_id, drive_service)
 
     test_data_generator = TSDataGenerator(test_df, feature_cols, label_cols, batch_size=batch_size, seq_length=sequence_length, loop=False)
 
