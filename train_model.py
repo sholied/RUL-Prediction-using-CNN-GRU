@@ -97,27 +97,19 @@ def calc_training_rul(df):
 
 def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     # Create the model
-    if inp_model == "cnn_gru":
-        plot_filename = "plot_train_{}_cnn{}_gru{}.png".format(inp_model, num_cnn, num_gru)
-        results_filename = 'results_train_{}_cnn{}_gru{}.txt'.format(inp_model, num_cnn, num_gru)
-        model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels)
-    elif inp_model == "single_gru":
-        plot_filename = "plot_train_{}_gru{}.png".format(inp_model, num_cnn, num_gru)
-        results_filename = 'results_train_{}_gru{}.txt'.format(inp_model, num_cnn, num_gru)
-        model = model_gru(num_gru, sequence_length, num_features, num_labels)
-    elif inp_model == "single_lstm":
-        plot_filename = "plot_train_{}_lstm{}.png".format(inp_model, num_cnn, num_gru)
-        results_filename = 'results_train_{}_lstm{}.txt'.format(inp_model, num_cnn, num_gru)
-        model = model_cnnlstm(num_cnn, num_gru, sequence_length, num_features, num_labels)
-    elif inp_model == "cnn_lstm":
-        plot_filename = "plot_train_{}_cnn{}_lstm{}.png".format(inp_model, num_cnn, num_gru)
-        results_filename = 'results_train_{}_cnn{}_lstm{}.txt'.format(inp_model, num_cnn, num_gru)
-        model = model_cnnlstm(num_cnn, num_gru, sequence_length, num_features, num_labels)
+    if inp_model in ["cnn_gru", "cnn_lstm"]:
+        plot_filename = "plot_train_{}_{}_{}.png".format(inp_model, num_cnn, num_gru)
+        results_filename = 'results_train_{}_{}_{}.txt'.format(inp_model, num_cnn, num_gru)
+        model = model_cnngru(num_cnn, num_gru, sequence_length, num_features, num_labels) if inp_model == "cnn_gru" else model_cnnlstm(num_cnn, num_gru, sequence_length, num_features, num_labels)
+    elif inp_model in ["single_gru", "single_lstm"]:
+        plot_filename = "plot_train_{}_{}.png".format(inp_model, num_gru)
+        results_filename = 'results_train_{}_{}.txt'.format(inp_model, num_gru)
+        model = model_gru(num_gru, sequence_length, num_features, num_labels) if inp_model == "single_gru" else model_lstm(num_gru, sequence_length, num_features, num_labels)
     else:
         plot_filename = "plot_train_{}_{}_{}.png".format(inp_model, num_cnn, num_gru)
         results_filename = 'results_train_{}_{}_{}.txt'.format(inp_model, num_cnn, num_gru)
         print("-------------------------------------------------------------------------\n")
-        print("model incorrect, please choose one : single_gru or cnn_gru !\n")
+        print("model incorrect, please choose one: single_gru, cnn_gru, single_lstm, or cnn_lstm!\n")
         print("-------------------------------------------------------------------------\n")
         return
 
