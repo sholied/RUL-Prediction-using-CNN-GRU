@@ -33,8 +33,8 @@ def model_gru(num_gru, seq_length, num_features, num_labels):
     # Dense layers
     model.add(Dense(units=64, activation='relu'))
     model.add(Dense(units=32, activation='relu'))
-    # Output layer: 1 unit, no activation for continuous RUL prediction
-    model.add(Dense(units=1))  # No activation for regression
+
+    model.add(Dense(units=1))
     
     return model
 
@@ -65,8 +65,7 @@ def model_lstm(num_lstm, seq_length, num_features, num_labels):
     model.add(Dense(units=64, activation='relu'))
     model.add(Dense(units=32, activation='relu'))
     
-    # Output layer: 1 unit, no activation for continuous RUL prediction
-    model.add(Dense(units=1))  # No activation for regression
+    model.add(Dense(units=num_labels))
     
     return model
 
@@ -100,9 +99,8 @@ def model_cnngru(num_cnn, num_gru, seq_length, num_features, num_labels):
     # Dense layers
     model.add(Dense(units=64, activation='relu'))
     model.add(Dense(units=32, activation='relu'))
-    
-    # Output layer: 1 unit, no activation for continuous RUL prediction
-    model.add(Dense(units=1))  # No activation for regression
+
+    model.add(Dense(units=num_labels))
     
     return model
 
@@ -137,8 +135,7 @@ def model_cnnlstm(num_cnn, num_lstm, seq_length, num_features, num_labels):
     # Dense layers
     model.add(Dense(units=64, activation='relu'))
     model.add(Dense(units=32, activation='relu'))
-    
-    # Output layer: 1 unit, no activation for continuous RUL prediction
-    model.add(Dense(units=1))  # No activation for regression
+
+    model.add(Dense(units=num_labels))
     
     return model
