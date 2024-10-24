@@ -63,18 +63,16 @@ def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=Tru
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), log_dir)
 
     # Path to save after each epoch. Include epoch and val loss
-    checkpoint_path = os.path.join(log_dir, "{}_model_*epoch*_*val_loss*.keras".format(name.lower()))
+    checkpoint_path = os.path.join(log_dir, "{}_model".format(name.lower()))
 
     if val_loss:
-        checkpoint_path = checkpoint_path.replace("*val_loss*", "{val_loss:.2f}")
+        checkpoint_path += "_{val_loss:.2f}"  # Include val_loss in filename
         per_epoch = True
-    else:
-        checkpoint_path = checkpoint_path.replace("_*val_loss*", "")
 
     if per_epoch:
-        checkpoint_path = checkpoint_path.replace("*epoch*", "{epoch:04d}")
-    else:
-        checkpoint_path = checkpoint_path.replace("_*epoch*", "")
+        checkpoint_path += "_{epoch:04d}"  # Include epoch in filename
+
+    checkpoint_path += ".keras"  # Ensure the new format is used
 
     return log_dir, checkpoint_path
 

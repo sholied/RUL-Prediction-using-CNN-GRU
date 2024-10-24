@@ -125,7 +125,13 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     patience = 100
 
     tensorboard = TensorBoard(log_dir=log_dir, histogram_freq=0, write_graph=True, write_images=False)
-    checkpointer = ModelCheckpoint(checkpoint_path, verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint(
+            filepath=checkpoint_path,  # Save in the new Keras format
+            save_weights_only=False,   # Ensure the full model is saved
+            monitor='val_loss',
+            mode='min',
+            save_best_only=True
+        )
 
     epoch_loss_history = []
     epoch_val_history = []
