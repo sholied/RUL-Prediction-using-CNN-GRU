@@ -50,29 +50,27 @@ def upload_to_drive(file_name, folder_id, service):
         print(f"An error occurred while uploading {file_name}: {e}")
 
 def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=True):
-    # Directory for training logs
     now = datetime.datetime.now()
     now_str = "{:%Y%m%dT%H%M}".format(now)
     log_dir = os.path.join(model_dir, "{}{}".format(name.lower(), now_str))
 
     # Create log_dir if not exists
-    if not os.path.exists(log_dir):
-        if create_dir:
-            os.makedirs(log_dir)
-        else:
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), log_dir)
+    if create_dir and not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
-    # Path to save after each epoch. Include epoch and val loss
-    checkpoint_path = os.path.join(log_dir, "{}_model".format(name.lower()))
-
+    # Path to save model
+    checkpoint_path = os.path.join(log_dir, "{}_model_*epoch*_*val_loss*.keras".format(name.lower()))
+    
     if val_loss:
-        checkpoint_path += "_{val_loss:.2f}"  # Include val_loss in filename
+        checkpoint_path = checkpoint_path.replace("*val_loss*", "{val_loss:.2f}")
         per_epoch = True
+    else:
+        checkpoint_path = checkpoint_path.replace("_*val_loss*", "")
 
     if per_epoch:
-        checkpoint_path += "_{epoch:04d}"  # Include epoch in filename
-
-    checkpoint_path += ".keras"  # Ensure the new format is used
+        checkpoint_path = checkpoint_path.replace("*epoch*", "{epoch:04d}")
+    else:
+        checkpoint_path = checkpoint_path.replace("_*epoch*", "")
 
     return log_dir, checkpoint_path
 
