@@ -33,10 +33,21 @@ def find_or_create_folder(service, folder_name, parent_folder_id):
         return create_folder(service, folder_name, parent_folder_id)
 
 def upload_to_drive(file_name, folder_id, service):
+    """Upload a file to Google Drive using resumable upload."""
     file_metadata = {'name': os.path.basename(file_name), 'parents': [folder_id]}
-    media = MediaFileUpload(file_name, mimetype='application/octet-stream')
-    uploaded_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-    print(f"Uploaded {file_name} to Google Drive with file ID: {uploaded_file.get('id')}")
+    
+    # Open file and use MediaIoBaseUpload for resumable upload
+    try:
+        media = MediaFileUpload(file_name, mimetype='application/octet-stream', resumable=True)
+        request = service.files().create(body=file_metadata, media_body=media, fields='id')
+        response = None
+        while response is None:
+            status, response = request.next_chunk()
+            if status:
+                print(f"Upload progress: {int(status.progress() * 100)}%")
+        print(f"Uploaded {file_name} to Google Drive with file ID: {response.get('id')}")
+    except Exception as e:
+        print(f"An error occurred while uploading {file_name}: {e}")
 
 def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=True):
     # Directory for training logs
