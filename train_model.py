@@ -334,7 +334,7 @@ if __name__ == "__main__":
         "--epochs",
         required=False,
         type=int,
-        default="10",
+        default="100",
         help="number of epochs for training",
     )
 
@@ -398,30 +398,11 @@ if __name__ == "__main__":
 
     print("========================START TRAINING MODEL===========================")
     # for num_gru in range(2, 5):
-    for num_gru in range(1, 2):
-        args.model = 'single_gru'
-        print("PROCESS NUMBER LAYER GRU : ", num_gru)
-        # Setup log directory
-        log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}".format(args.model, num_gru))
-
-        print("Log dir: ", log_dir)
-        print("Checkpoint path: ", checkpoint_path)
-
-        # Save the pipeline for later use
-        pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
-        joblib.dump(pipeline, pipeline_path) 
-
-        train_model(args.model, args.epochs, num_gru=num_gru)
-        time.sleep(1)
-
-    # print("Wait before starting the next 2nd loop...")
-    # countdown(5)
-
-    # for num_lstm in range(2, 5):
-    #     args.model = 'single_lstm'
-    #     print("PROCESS NUMBER LAYER LSTM : ", num_lstm)
+    # for num_gru in range(1, 2):
+    #     args.model = 'single_gru'
+    #     print("PROCESS NUMBER LAYER GRU : ", num_gru)
     #     # Setup log directory
-    #     log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}".format(args.model, num_lstm))
+    #     log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}".format(args.model, num_gru))
 
     #     print("Log dir: ", log_dir)
     #     print("Checkpoint path: ", checkpoint_path)
@@ -430,11 +411,30 @@ if __name__ == "__main__":
     #     pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
     #     joblib.dump(pipeline, pipeline_path) 
 
-    #     train_model(args.model, args.epochs, num_gru=num_lstm)
+    #     train_model(args.model, args.epochs, num_gru=num_gru)
     #     time.sleep(1)
 
-    # print("Wait before starting the next 3rd loop...")
+    # print("Wait before starting the next 2nd loop...")
     # countdown(5)
+
+    for num_lstm in range(2, 5):
+        args.model = 'single_lstm'
+        print("PROCESS NUMBER LAYER LSTM : ", num_lstm)
+        # Setup log directory
+        log_dir, checkpoint_path = set_log_dir(args.model + "_" + MODEL_DIR, "engine_{}_{}".format(args.model, num_lstm))
+
+        print("Log dir: ", log_dir)
+        print("Checkpoint path: ", checkpoint_path)
+
+        # Save the pipeline for later use
+        pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+        joblib.dump(pipeline, pipeline_path) 
+
+        train_model(args.model, args.epochs, num_gru=num_lstm)
+        time.sleep(1)
+
+    print("Wait before starting the next 3rd loop...")
+    countdown(5)
 
     # for num_cnn in range(1, 4):
     #     # Iterate through GRU layers (2 to 3)
@@ -457,20 +457,19 @@ if __name__ == "__main__":
     # print("Wait before starting the next 4th loop...")
     # countdown(5)
 
-    # for num_cnn in range(1, 4):
-    #     # Iterate through GRU layers (2 to 3)
-    #     for num_lstm in range(1, 4):
-    #         args.model = 'cnn_lstm'
-    #         print("PROCESS NUMBER LAYER CNN : {} AND LAYER LSTM : {}".format(num_cnn, num_lstm))
-    #         # Setup log directory
-    #         log_dir, checkpoint_path = set_log_dir(MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_lstm))
+    for num_cnn in range(1, 4):
+        for num_lstm in range(1, 4):
+            args.model = 'cnn_lstm'
+            print("PROCESS NUMBER LAYER CNN : {} AND LAYER LSTM : {}".format(num_cnn, num_lstm))
+            # Setup log directory
+            log_dir, checkpoint_path = set_log_dir(args.model + "_" + MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_lstm))
 
-    #         print("Log dir: ", log_dir)
-    #         print("Checkpoint path: ", checkpoint_path)
+            print("Log dir: ", log_dir)
+            print("Checkpoint path: ", checkpoint_path)
 
-    #         # Save the pipeline for later use
-    #         pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
-    #         joblib.dump(pipeline, pipeline_path) 
+            # Save the pipeline for later use
+            pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+            joblib.dump(pipeline, pipeline_path) 
 
-    #         train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_lstm)
-    #         time.sleep(1)
+            train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_lstm)
+            time.sleep(1)

@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
 
     # Setup log directory
-    checkpoint_path = sorted(glob.glob(MODEL_DIR+"/*/*.keras"), reverse=True)[0]
+    checkpoint_path = sorted(glob.glob(MODEL_DIR+"/*/*.h5"), reverse=True)[0]
 
     print("Checkpoint path: ", checkpoint_path)
     #Data Transformation
