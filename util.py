@@ -59,7 +59,7 @@ def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=Tru
         os.makedirs(log_dir)
 
     # Path to save model
-    checkpoint_path = os.path.join(log_dir, "{}_model_*epoch*_*val_loss*.keras".format(name.lower()))
+    checkpoint_path = os.path.join(log_dir, "{}_model_*epoch*_*val_loss*.h5".format(name.lower()))
     
     if val_loss:
         checkpoint_path = checkpoint_path.replace("*val_loss*", "{val_loss:.2f}")
@@ -79,7 +79,7 @@ def find_model_file(model_dir, by_val_loss=True):
     # file names are expected in format: <name>_model_<timestamp>_<epoch>_<val_loss>.keras
     # _<epoch> and _<val_loss> are optional
     
-    path = os.path.join(model_dir, "*.keras")
+    path = os.path.join(model_dir, "*.h5")
     all_model_paths = sorted(glob.glob(path))
 
     if by_val_loss:

@@ -398,7 +398,7 @@ if __name__ == "__main__":
 
     print("========================START TRAINING MODEL===========================")
     # for num_gru in range(2, 5):
-    for num_gru in range(2, 3):
+    for num_gru in range(1, 2):
         args.model = 'single_gru'
         print("PROCESS NUMBER LAYER GRU : ", num_gru)
         # Setup log directory
