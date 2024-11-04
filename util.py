@@ -6,26 +6,61 @@ import glob
 import numpy as np
 from keras import backend as K
 import tensorflow as tf
+from googleapiclient.http import MediaFileUpload
 
+
+# Check if the folder exists
+def create_folder(service, folder_name, parent_folder_id):
+    folder_metadata = {
+        'name': folder_name,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [parent_folder_id]  # Specify the parent folder ID
+    }
+    folder = service.files().create(body=folder_metadata, fields='id').execute()
+    return folder.get('id')
+
+# Try to find the folder first; if not found, create it
+def find_or_create_folder(service, folder_name, parent_folder_id):
+    query = f"'{parent_folder_id}' in parents and name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
+    results = service.files().list(q=query, fields='files(id, name)').execute()
+    folders = results.get('files', [])
+    
+    if folders:
+        # Folder exists, return the ID
+        return folders[0].get('id')
+    else:
+        # Folder does not exist, create it
+        return create_folder(service, folder_name, parent_folder_id)
+
+def upload_to_drive(file_name, folder_id, service):
+    """Upload a file to Google Drive using resumable upload."""
+    file_metadata = {'name': os.path.basename(file_name), 'parents': [folder_id]}
+    
+    # Open file and use MediaIoBaseUpload for resumable upload
+    try:
+        media = MediaFileUpload(file_name, mimetype='application/octet-stream', resumable=True)
+        request = service.files().create(body=file_metadata, media_body=media, fields='id')
+        response = None
+        while response is None:
+            status, response = request.next_chunk()
+            if status:
+                print(f"Upload progress: {int(status.progress() * 100)}%")
+        print(f"Uploaded {file_name} to Google Drive with file ID: {response.get('id')}")
+    except Exception as e:
+        print(f"An error occurred while uploading {file_name}: {e}")
 
 def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=True):
-    # Directory for training logs
     now = datetime.datetime.now()
-
     now_str = "{:%Y%m%dT%H%M}".format(now)
     log_dir = os.path.join(model_dir, "{}{}".format(name.lower(), now_str))
 
     # Create log_dir if not exists
-    if not os.path.exists(log_dir):
-        if create_dir:
-            os.makedirs(log_dir)
-        else:
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), log_dir)
+    if create_dir and not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
-    # Path to save after each epoch. Include epoch and val loss
-    # placeholders that gets filled by Keras.
+    # Path to save model
     checkpoint_path = os.path.join(log_dir, "{}_model_*epoch*_*val_loss*.h5".format(name.lower()))
-
+    
     if val_loss:
         checkpoint_path = checkpoint_path.replace("*val_loss*", "{val_loss:.2f}")
         per_epoch = True
@@ -41,7 +76,7 @@ def set_log_dir(model_dir, name, per_epoch=False, val_loss=False, create_dir=Tru
 
 
 def find_model_file(model_dir, by_val_loss=True):
-    # file names are expected in format: <name>_model_<timestamp>_<epoch>_<val_loss>.h5
+    # file names are expected in format: <name>_model_<timestamp>_<epoch>_<val_loss>.keras
     # _<epoch> and _<val_loss> are optional
     
     path = os.path.join(model_dir, "*.h5")
