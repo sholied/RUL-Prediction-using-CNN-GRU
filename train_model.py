@@ -27,8 +27,8 @@ from util import LRDecay
 from data_util import *
 from model import *
 import datetime
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
+# from google.oauth2.service_account import Credentials
+# from googleapiclient.discovery import build
 
 MODEL_DIR = os.path.abspath("model")
 
@@ -55,11 +55,11 @@ SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
 folder_name = f"engine_{datetime.datetime.now().strftime('%Y%m%dT%H%M')}"
 parent_folder_id = os.getenv('FOLDER_ID')  # Get folder ID from the environment variable
 
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-drive_service = build('drive', 'v3', credentials=creds)
+# SCOPES = ['https://www.googleapis.com/auth/drive.file']
+# creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+# drive_service = build('drive', 'v3', credentials=creds)
 # Create or find the folder
-folder_id = find_or_create_folder(drive_service, folder_name, parent_folder_id)
+# folder_id = find_or_create_folder(drive_service, folder_name, parent_folder_id)
 
 def load_data(paths, col_names, sort_cols):
     # read data 
