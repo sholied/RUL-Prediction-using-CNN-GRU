@@ -217,9 +217,9 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
     print("-------------------------Finish Training----------------------")
 
     # Uploading files to Google Drive
-    upload_to_drive(checkpoint_path, folder_id, drive_service)  # Upload the best model weights
-    upload_to_drive(plot_filename, folder_id, drive_service)  # Upload the loss/val_loss plot
-    upload_to_drive(results_filename, folder_id, drive_service)  # Upload the training result summary
+    # upload_to_drive(checkpoint_path, folder_id, drive_service)  # Upload the best model weights
+    # upload_to_drive(plot_filename, folder_id, drive_service)  # Upload the loss/val_loss plot
+    # upload_to_drive(results_filename, folder_id, drive_service)  # Upload the training result summary
 
     # Testing phase
     print("Starting model testing...")
@@ -300,7 +300,7 @@ def train_model(inp_model, num_epochs, num_cnn=0, num_gru=0):
         # upload_to_drive(test_result_filename, folder_id, drive_service)
 
     # Upload the overall comparison file to the drive
-    upload_to_drive(compare_result_filename, folder_id, drive_service)
+    # upload_to_drive(compare_result_filename, folder_id, drive_service)
 
     print("-------------------------Finish Testing----------------------")
 
@@ -334,7 +334,7 @@ if __name__ == "__main__":
         "--epochs",
         required=False,
         type=int,
-        default="2",
+        default="1",
         help="number of epochs for training",
     )
 
@@ -395,8 +395,11 @@ if __name__ == "__main__":
     # num_cnn = 3
     # num_gru = 1
 
+    log_dir, checkpoint_path = set_log_dir(MODEL_DIR + "_" + args.model, "engine_{}".format(args.model))
 
-    print("========================START TRAINING MODEL===========================")
+
+
+    # print("========================START TRAINING MODEL===========================")
     # for num_gru in range(2, 5):
     # for num_gru in range(1, 2):
     #     args.model = 'single_gru'
@@ -417,24 +420,24 @@ if __name__ == "__main__":
     # print("Wait before starting the next 2nd loop...")
     # countdown(5)
 
-    for num_lstm in range(2, 5):
-        args.model = 'single_lstm'
-        print("PROCESS NUMBER LAYER LSTM : ", num_lstm)
-        # Setup log directory
-        log_dir, checkpoint_path = set_log_dir(args.model + "_" + MODEL_DIR, "engine_{}_{}".format(args.model, num_lstm))
+    # for num_lstm in range(2, 5):
+    #     args.model = 'single_lstm'
+    #     print("PROCESS NUMBER LAYER LSTM : ", num_lstm)
+    #     # Setup log directory
+    #     log_dir, checkpoint_path = set_log_dir(args.model + "_" + MODEL_DIR, "engine_{}_{}".format(args.model, num_lstm))
 
-        print("Log dir: ", log_dir)
-        print("Checkpoint path: ", checkpoint_path)
+    #     print("Log dir: ", log_dir)
+    #     print("Checkpoint path: ", checkpoint_path)
 
-        # Save the pipeline for later use
-        pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
-        joblib.dump(pipeline, pipeline_path) 
+    #     # Save the pipeline for later use
+    #     pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+    #     joblib.dump(pipeline, pipeline_path) 
 
-        train_model(args.model, args.epochs, num_gru=num_lstm)
-        time.sleep(1)
+    #     train_model(args.model, args.epochs, num_gru=num_lstm)
+    #     time.sleep(1)
 
-    print("Wait before starting the next 3rd loop...")
-    countdown(5)
+    # print("Wait before starting the next 3rd loop...")
+    # countdown(5)
 
     # for num_cnn in range(1, 4):
     #     # Iterate through GRU layers (2 to 3)
@@ -457,19 +460,19 @@ if __name__ == "__main__":
     # print("Wait before starting the next 4th loop...")
     # countdown(5)
 
-    for num_cnn in range(1, 4):
-        for num_lstm in range(1, 4):
-            args.model = 'cnn_lstm'
-            print("PROCESS NUMBER LAYER CNN : {} AND LAYER LSTM : {}".format(num_cnn, num_lstm))
-            # Setup log directory
-            log_dir, checkpoint_path = set_log_dir(args.model + "_" + MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_lstm))
+    # for num_cnn in range(1, 4):
+    #     for num_lstm in range(1, 4):
+    #         args.model = 'cnn_lstm'
+    #         print("PROCESS NUMBER LAYER CNN : {} AND LAYER LSTM : {}".format(num_cnn, num_lstm))
+    #         # Setup log directory
+    #         log_dir, checkpoint_path = set_log_dir(args.model + "_" + MODEL_DIR, "engine_{}_{}_{}".format(args.model, num_cnn, num_lstm))
 
-            print("Log dir: ", log_dir)
-            print("Checkpoint path: ", checkpoint_path)
+    #         print("Log dir: ", log_dir)
+    #         print("Checkpoint path: ", checkpoint_path)
 
-            # Save the pipeline for later use
-            pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
-            joblib.dump(pipeline, pipeline_path) 
+    #         # Save the pipeline for later use
+    #         pipeline_path = os.path.join(log_dir, 'engine_pipeline.pkl') 
+    #         joblib.dump(pipeline, pipeline_path) 
 
-            train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_lstm)
-            time.sleep(1)
+    #         train_model(args.model, args.epochs,num_cnn=num_cnn, num_gru=num_lstm)
+    #         time.sleep(1)
